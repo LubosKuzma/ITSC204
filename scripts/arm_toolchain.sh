@@ -1,8 +1,9 @@
+
+#! /bin/bash
+
 # Created by Lubos Kuzma
 # ISS Program, SADT, SAIT
 # August 2022
-
-#! /bin/bash
 
 if [ $# -lt 1 ]; then
         echo "Usage:"
