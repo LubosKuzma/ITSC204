@@ -29,9 +29,13 @@ char * verify(char input[]) {
     }
 
     if (strlen(input) > 16){                                                // if more than 16
-        printf("You have entered too many digits. maximum is 16 bits.");    
+        printf("You have entered too many digits. Enter precisely 16 bits.");    
         exit(1);
-    }
+    } else if(strlen(input) < 16)   {
+        printf("You have entered too few digits. Enter precisely 16 bits.");
+        exit(1);
+     }
+
 
     return input;                                                           // returns the pointer
 }
@@ -49,9 +53,10 @@ void step_1(char input[], int step_2_array[]) {
     
     printf("Step 1:\n\n");
     for (int x = 0; x < strlen(input); x++) {                               // step through the input
+        int rev_x = (strlen(input) - x - 1);                                // Reversed order of digits (MSB first)
         double exponent =  pow(2.0, (double)x);                             // calculate the 2^n
-        double multi = exponent * (input[x] - '0');                         // multiply the 2^n by input[n]
-        printf("Digit #%d => %c times \t%d (2^%d) => \t\t%d\n", x, input[x], (int)exponent, x, (int)multi);
+        double multi = exponent * (input[rev_x] - '0');                          // multiply the 2^n by input[n]
+        printf("Digit #%d => %c times \t%d (2^%d) => \t\t%d\n", x, input[rev_x], (int)exponent, x, (int)multi);
         step_2_array[x+1] = (int)multi;                                     // save the results to an array
     }
 
@@ -99,3 +104,7 @@ void main() {
 
   
 }
+    
+
+
+
