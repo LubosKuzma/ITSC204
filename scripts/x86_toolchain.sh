@@ -14,7 +14,6 @@ if [ $# -lt 1 ]; then
 	echo "-b | --break <break point>    Add breakpoint after running gdb. Default is _start."
 	echo "-r | --run                    Run program in gdb automatically. Same as run command inside gdb env."
 	echo "-q | --qemu                   Run executable in QEMU emulator. This will execute the program."
-	echo "-32| --x86                	Compile for 32bit (x86) system."
 	echo "-o | --output <filename>      Output filename."
 
 	exit 1
@@ -41,10 +40,6 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-v|--verbose)
 			VERBOSE=True
-			shift # past argument
-			;;
-		-32|--x86)
-			BITS=False
 			shift # past argument
 			;;
 		-q|--qemu)
@@ -102,11 +97,6 @@ if [ "$BITS" == "True" ]; then
 
 	nasm -f elf64 $1 -o $OUTPUT_FILE.o && echo ""
 
-
-elif [ "$BITS" == "False" ]; then
-
-	nasm -f elf $1 -o $OUTPUT_FILE.o && echo ""
-
 fi
 
 if [ "$VERBOSE" == "True" ]; then
@@ -126,11 +116,6 @@ if [ "$BITS" == "True" ]; then
 
 	ld -m elf_x86_64 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
 
-
-elif [ "$BITS" == "False" ]; then
-
-	ld -m elf_i386 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
-
 fi
 
 
@@ -148,10 +133,6 @@ if [ "$QEMU" == "True" ]; then
 	if [ "$BITS" == "True" ]; then
 	
 		qemu-x86_64 $OUTPUT_FILE && echo ""
-
-	elif [ "$BITS" == "False" ]; then
-
-		qemu-i386 $OUTPUT_FILE && echo ""
 
 	fi
 
