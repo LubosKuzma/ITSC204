@@ -1,176 +1,160 @@
-#! /bin/bash
+#!/bin/bash
 
-# Created by Lubos Kuzma
-# ISS Program, SADT, SAIT
-# August 2022
+# Script for managing assembly projects for x86 (using NASM and LD)
 
+# Function to check and install dependencies
+check_dependencies() {
+    echo "Checking for required dependencies..."
+    OS="$(uname -s)"
+    case "$OS" in
+        Linux*)
+            sudo apt-get update && sudo apt-get install -y nasm gcc gdb
+            # Install qemu if needed for emulation, not for compilation
+            ;;
+        Darwin*)
+            brew install nasm gcc gdb
+            ;;
+        CYGWIN*|MINGW*)
+            echo "Please install NASM, GCC, and GDB manually for Cygwin/MinGW."
+            ;;
+        *)
+            echo "Unsupported OS. Please install NASM, GCC, and GDB manually."
+            ;;
+    esac
+}
 
-if [ $# -lt 1 ]; then
-	echo "Usage:"
-	echo ""
-	echo "x86_toolchain.sh [ options ] <assembly filename> [-o | --output <output filename>]"
-	echo ""
-	echo "-v | --verbose                Show some information about steps performed."
-	echo "-g | --gdb                    Run gdb command on executable."
-	echo "-b | --break <break point>    Add breakpoint after running gdb. Default is _start."
-	echo "-r | --run                    Run program in gdb automatically. Same as run command inside gdb env."
-	echo "-q | --qemu                   Run executable in QEMU emulator. This will execute the program."
-	echo "-64| --x86-64                 Compile for 64bit (x86-64) system."
-	echo "-o | --output <filename>      Output filename."
+# Function to display usage instructions
+usage() {
+    echo "Usage: $0 [options] <source filename>"
+    echo "Options:"
+    echo "  -v, --verbose                Show detailed output."
+    echo "  -g, --gdb                    Run gdb on the executable."
+    echo "  -b, --break <breakpoint>     Add breakpoint in gdb."
+    echo "  -r, --run                    Run program in gdb automatically."
+    echo "  -q, --qemu                   Run executable in QEMU emulator (if qemu is installed)."
+    echo "  -64, --x86-64                Compile for 64-bit x86 (default)."
+    echo "  -32, --x86-32                Compile for 32-bit x86."
+    echo "  -o, --output <filename>      Specify output filename."
+    echo "  -l, --library <library>      Link external library (comma-separated for multiple)."
+}
 
-	exit 1
-fi
+# Function to parse command-line arguments
+parse_arguments() {
+    BITS="64" # Default to 64-bit
+    LIBRARIES=()
+    VERBOSE=False
+    GDB=False
+    QEMU=False
+    RUN=False
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+        case "$key" in
+            -g|--gdb)
+                GDB=True
+                ;;
+            -o|--output)
+                OUTPUT_FILE="$2"
+                shift # past argument
+                ;;
+            -v|--verbose)
+                VERBOSE=True
+                ;;
+            -64|--x86-64)
+                BITS="64"
+                ;;
+            -32|--x86-32)
+                BITS="32"
+                ;;
+            -q|--qemu)
+                QEMU=True
+                ;;
+            -r|--run)
+                RUN=True
+                ;;
+            -b|--break)
+                BREAK="$2"
+                shift # past argument
+                ;;
+            -l|--library)
+                IFS=',' read -r -a LIBRARIES <<< "$2"
+                shift # past argument
+                ;;
+            *)
+                # Assume it is the source file if it's not a known option
+                if [[ -z $SOURCE_FILE ]]; then
+                    SOURCE_FILE="$1"
+                else
+                    echo "Unknown option: $1"
+                    usage
+                    exit 1
+                fi
+                ;;
+        esac
+        shift # past argument or value
+    done
+    OUTPUT_FILE=${OUTPUT_FILE:-${SOURCE_FILE%.*}}
+}
 
-POSITIONAL_ARGS=()
-GDB=False
-OUTPUT_FILE=""
-VERBOSE=False
-BITS=False
-QEMU=False
-BREAK="_start"
-RUN=False
-while [[ $# -gt 0 ]]; do
-	case $1 in
-		-g|--gdb)
-			GDB=True
-			shift # past argument
-			;;
-		-o|--output)
-			OUTPUT_FILE="$2"
-			shift # past argument
-			shift # past value
-			;;
-		-v|--verbose)
-			VERBOSE=True
-			shift # past argument
-			;;
-		-64|--x84-64)
-			BITS=True
-			shift # past argument
-			;;
-		-q|--qemu)
-			QEMU=True
-			shift # past argument
-			;;
-		-r|--run)
-			RUN=True
-			shift # past argument
-			;;
-		-b|--break)
-			BREAK="$2"
-			shift # past argument
-			shift # past value
-			;;
-		-*|--*)
-			echo "Unknown option $1"
-			exit 1
-			;;
-		*)
-			POSITIONAL_ARGS+=("$1") # save positional arg
-			shift # past argument
-			;;
-	esac
-done
+# Main function of the script
+main() {
+    check_dependencies
 
-set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+    parse_arguments "$@"
 
-if [[ ! -f $1 ]]; then
-	echo "Specified file does not exist"
-	exit 1
-fi
+    if [[ -z $SOURCE_FILE ]]; then
+        echo "Error: No source file specified."
+        usage
+        exit 1
+    fi
 
-if [ "$OUTPUT_FILE" == "" ]; then
-	OUTPUT_FILE=${1%.*}
-fi
+    if [[ ! -f $SOURCE_FILE ]]; then
+        echo "Error: Specified source file does not exist."
+        exit 1
+    fi
 
-if [ "$VERBOSE" == "True" ]; then
-	echo "Arguments being set:"
-	echo "	GDB = ${GDB}"
-	echo "	RUN = ${RUN}"
-	echo "	BREAK = ${BREAK}"
-	echo "	QEMU = ${QEMU}"
-	echo "	Input File = $1"
-	echo "	Output File = $OUTPUT_FILE"
-	echo "	Verbose = $VERBOSE"
-	echo "	64 bit mode = $BITS" 
-	echo ""
+    if [[ $VERBOSE = True ]]; then
+        echo "Configuration:"
+        echo "Compiling for ${BITS}-bit."
+        echo "Libraries: ${LIBRARIES[*]}"
+    fi
 
-	echo "NASM started..."
+    # Compilation and Linking process
+    echo "Compiling for x86 architecture using NASM and LD."
+    nasm_flags="-f elf${BITS}"
+    ld_flags="-m elf_i386"
+    [ "$BITS" = "64" ] && ld_flags="-m elf_x86_64"
 
-fi
+    # Assemble the program
+    nasm $nasm_flags "$SOURCE_FILE" -o "${OUTPUT_FILE}.o"
+    if [ $? -ne 0 ]; then
+        echo "Assembly failed"
+        exit 1
+    fi
 
-if [ "$BITS" == "True" ]; then
+    # Link the program
+    ld $ld_flags "${OUTPUT_FILE}.o" -o "$OUTPUT_FILE" "${LIBRARIES[@]/#/-l}"
+    if [ $? -ne 0 ]; then
+        echo "Linking failed"
+        exit 1
+    fi
 
-	nasm -f elf64 $1 -o $OUTPUT_FILE.o && echo ""
+    if [[ $GDB = True ]]; then
+        gdb_params=()
+        if [[ $BREAK ]]; then
+            gdb_params+=("-ex" "break ${BREAK}")
+        fi
+        if [[ $RUN = True ]]; then
+            gdb_params+=("-ex" "run")
+        fi
+        echo "Running GDB debugger."
+        gdb "${gdb_params[@]}" "$OUTPUT_FILE"
+    fi
 
+    if [[ $QEMU = True ]]; then
+        echo "Running executable in QEMU."
+        qemu-system-i386 -drive format=raw,file="$OUTPUT_FILE"
+    fi
+}
 
-elif [ "$BITS" == "False" ]; then
-
-	nasm -f elf $1 -o $OUTPUT_FILE.o && echo ""
-
-fi
-
-if [ "$VERBOSE" == "True" ]; then
-
-	echo "NASM finished"
-	echo "Linking ..."
-	
-fi
-
-if [ "$VERBOSE" == "True" ]; then
-
-	echo "NASM finished"
-	echo "Linking ..."
-fi
-
-if [ "$BITS" == "True" ]; then
-
-	ld -m elf_x86_64 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
-
-
-elif [ "$BITS" == "False" ]; then
-
-	ld -m elf_i386 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
-
-fi
-
-
-if [ "$VERBOSE" == "True" ]; then
-
-	echo "Linking finished"
-
-fi
-
-if [ "$QEMU" == "True" ]; then
-
-	echo "Starting QEMU ..."
-	echo ""
-
-	if [ "$BITS" == "True" ]; then
-	
-		qemu-x86_64 $OUTPUT_FILE && echo ""
-
-	elif [ "$BITS" == "False" ]; then
-
-		qemu-i386 $OUTPUT_FILE && echo ""
-
-	fi
-
-	exit 0
-	
-fi
-
-if [ "$GDB" == "True" ]; then
-
-	gdb_params=()
-	gdb_params+=(-ex "b ${BREAK}")
-
-	if [ "$RUN" == "True" ]; then
-
-		gdb_params+=(-ex "r")
-
-	fi
-
-	gdb "${gdb_params[@]}" $OUTPUT_FILE
-
-fi
+# Invoke main function with all passed arguments
+main "$@"
