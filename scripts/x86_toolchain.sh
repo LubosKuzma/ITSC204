@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Created by Natnael Araya
+# ISS Program, SADT, SAIT
+# November 2023
+
 # Script for managing assembly projects for x86 (using NASM and LD)
 
 # Function to check and install dependencies
