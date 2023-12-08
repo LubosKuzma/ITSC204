@@ -1,10 +1,11 @@
+#Created by Natnael Araya
+# ISS Program, SADT, SAIT
+# 2nd Version-December 2023
+
 #!/bin/bash
 
-# Created by Natnael Araya
-# ISS Program, SADT, SAIT
-# November 2023
-
-# Script for managing assembly projects for x86 (using NASM and LD)
+# Toolchain Script for Managing Assembly Projects for x86 and ARM (Raspberry Pi 3B/4)
+# This script supports 64-bit systems by default and includes options for 32-bit and ARM architectures.
 
 # Function to check and install dependencies
 check_dependencies() {
@@ -12,16 +13,19 @@ check_dependencies() {
     OS="$(uname -s)"
     case "$OS" in
         Linux*)
-            sudo apt-get update && sudo apt-get install -y nasm gcc gdb
-            # Install qemu if needed for emulation, not for compilation
+            # Dependencies for both x86 and ARM
+            sudo apt-get update && sudo apt-get install -y nasm gcc gdb qemu-user-static
             ;;
         Darwin*)
+            # macOS dependencies (primarily x86)
             brew install nasm gcc gdb
             ;;
         CYGWIN*|MINGW*)
+            # Manual installation prompt for Windows-based systems
             echo "Please install NASM, GCC, and GDB manually for Cygwin/MinGW."
             ;;
         *)
+            # Fallback for unsupported OS
             echo "Unsupported OS. Please install NASM, GCC, and GDB manually."
             ;;
     esac
@@ -35,16 +39,17 @@ usage() {
     echo "  -g, --gdb                    Run gdb on the executable."
     echo "  -b, --break <breakpoint>     Add breakpoint in gdb."
     echo "  -r, --run                    Run program in gdb automatically."
-    echo "  -q, --qemu                   Run executable in QEMU emulator (if qemu is installed)."
+    echo "  -q, --qemu                   Run executable in QEMU emulator (if installed)."
     echo "  -64, --x86-64                Compile for 64-bit x86 (default)."
     echo "  -32, --x86-32                Compile for 32-bit x86."
+    echo "  -arm, --arm                  Compile for ARM architecture (Raspberry Pi 3B/4)."
     echo "  -o, --output <filename>      Specify output filename."
     echo "  -l, --library <library>      Link external library (comma-separated for multiple)."
 }
 
 # Function to parse command-line arguments
 parse_arguments() {
-    BITS="64" # Default to 64-bit
+    ARCH="x86-64" # Default to 64-bit x86
     LIBRARIES=()
     VERBOSE=False
     GDB=False
@@ -64,10 +69,13 @@ parse_arguments() {
                 VERBOSE=True
                 ;;
             -64|--x86-64)
-                BITS="64"
+                ARCH="x86-64"
                 ;;
             -32|--x86-32)
-                BITS="32"
+                ARCH="x86-32"
+                ;;
+            -arm|--arm)
+                ARCH="arm"
                 ;;
             -q|--qemu)
                 QEMU=True
@@ -84,7 +92,7 @@ parse_arguments() {
                 shift # past argument
                 ;;
             *)
-                # Assume it is the source file if it's not a known option
+                # Assume it is the source file if not a known option
                 if [[ -z $SOURCE_FILE ]]; then
                     SOURCE_FILE="$1"
                 else
@@ -118,15 +126,27 @@ main() {
 
     if [[ $VERBOSE = True ]]; then
         echo "Configuration:"
-        echo "Compiling for ${BITS}-bit."
+        echo "Compiling for ${ARCH}."
         echo "Libraries: ${LIBRARIES[*]}"
     fi
 
     # Compilation and Linking process
-    echo "Compiling for x86 architecture using NASM and LD."
-    nasm_flags="-f elf${BITS}"
-    ld_flags="-m elf_i386"
-    [ "$BITS" = "64" ] && ld_flags="-m elf_x86_64"
+    echo "Compiling for ${ARCH} using NASM and LD."
+    case "$ARCH" in
+        "x86-64")
+            nasm_flags="-f elf64"
+            ld_flags="-m elf_x86_64"
+            ;;
+        "x86-32")
+            nasm_flags="-f elf32"
+            ld_flags="-m elf_i386"
+            ;;
+        "arm")
+            # ARM-specific flags (for Raspberry Pi)
+            nasm_flags="-f elf32"
+            ld_flags="-m armelf"
+            ;;
+    esac
 
     # Assemble the program
     nasm $nasm_flags "$SOURCE_FILE" -o "${OUTPUT_FILE}.o"
@@ -142,6 +162,7 @@ main() {
         exit 1
     fi
 
+    # GDB and QEMU handling
     if [[ $GDB = True ]]; then
         gdb_params=()
         if [[ $BREAK ]]; then
@@ -156,7 +177,7 @@ main() {
 
     if [[ $QEMU = True ]]; then
         echo "Running executable in QEMU."
-        qemu-system-i386 -drive format=raw,file="$OUTPUT_FILE"
+        qemu-system-${ARCH} -drive format=raw,file="$OUTPUT_FILE"
     fi
 }
 
