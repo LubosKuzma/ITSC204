@@ -83,7 +83,7 @@ if [ "$OUTPUT_FILE" == "" ]; then
 	OUTPUT_FILE=${1%.*}
 fi
 
-if [ "$VERBOSE" == "True" ]; then
+if [ "$VERBOSE" == "True" ]; then												#prints arguments
 	echo "Arguments being set:"
 	echo "	GDB = ${GDB}"
 	echo "	RUN = ${RUN}"
