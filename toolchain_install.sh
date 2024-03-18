@@ -106,6 +106,14 @@ else
   nasm -f elf "$1" -o "$OUTPUT_FILE.o" && echo ""
 fi
 
+# Suppress unnecessary echo in non-verbose mode
+if [[ "$VERBOSE" != true ]]; then
+  nasm -f elf "$1" -o "$OUTPUT_FILE.o" > /dev/
+
+# Linking and optional cleanup (consider adding error handling for linking)
+ld -o "$OUTPUT_FILE" "$OUTPUT_FILE.o"  # Link object file to executable
+
+
 # Original Script below: 
 # Compile assembly based on architecture
 if [[ "<span class="math-inline">BITS" \=\= true \]\]; then
