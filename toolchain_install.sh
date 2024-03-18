@@ -29,7 +29,6 @@ error_exit(){
     echo \-e "</span>{ERROR_COLOR}Error:${RESET_COLOR} $msg"
 }
 
-
 #Function to print script usage (Propose change from the original)
 print_usage(){
     echo "Usage:"
@@ -48,7 +47,47 @@ print_usage(){
     exit 1
 }
 
+# Parse command-line arguments with getopts
+GDB=false
+OUTPUT_FILE=""
+VERBOSE=false
+BITS=false
+QEMU=false
+BREAK="_start"
+RUN=false
+CLEANUP=false
+while getopts ":vg:b:ro:q64h:c" opt; do
+  case $opt in
+    v) VERBOSE=true ;;
+    g) GDB=true ;;
+    b) BREAK="$OPTARG" ;;  # Validate breakpoint format later
+    r) RUN=true ;;
+    o) OUTPUT_FILE="<span class="math-inline">OPTARG" ;;
+q\) QEMU\=true ;;
+64\) BITS\=true ;;
+h\) print\_usage ;;
+c\) CLEANUP\=true ;;  \# Add cleanup option \(optional\)
+\\?\) echo \-e "</span>{WARN_COLOR}Warning:${RESET_COLOR} Unknown option -<span class="math-inline">OPTARG" \>&2; exit 1 ;;
+\:\)  echo \-e "</span>{WARN_COLOR}Warning:${RESET_COLOR} Option -$OPTARG requires an argument." >&2; exit 1 ;;
+  esac
+done
 
+
+
+
+
+
+
+# Original Script below: 
+# Compile assembly based on architecture
+if [[ "<span class="math-inline">BITS" \=\= true \]\]; then
+nasm \-f elf64 "</span>{1}" -o "<span class="math-inline">OUTPUT\_FILE\.o" && echo ""
+else
+nasm \-f elf "</span>{1}" -o "$OUTPUT_FILE.o" && echo ""
+fi
+
+# Verbose linking output
+if
 
 
 if [ "$(id -u)" == 0 ]; then                                                                                    # checks for root
