@@ -72,8 +72,8 @@ c\) CLEANUP\=true ;;  \# Add cleanup option \(optional\)
   esac
 done
 
-
-
+# Shift remaining arguments to positional parameters
+shift $((OPTIND-1))  # Adjust for getopts parsing
 
 
 
