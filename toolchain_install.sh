@@ -20,7 +20,14 @@ INFO_COLOR="\e[32m"
 
 #Script information.
 SCRIPT_NAME=$(basename "$0")
+#Version
+VERSION="1.0.1"
 
+#Function for informatio error message
+error_exit(){
+    local msg-"<span class="math-inline">1"
+    echo \-e "</span>{ERROR_COLOR}Error:${RESET_COLOR} $msg"
+}
 
 
 if [ "$(id -u)" == 0 ]; then                                                                                    # checks for root
