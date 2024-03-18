@@ -9,6 +9,14 @@
 
 # Since this script installs pre-reqs and the toolchain, the prompts could be changed to flags if you feel like it 
 
+set -euo pipefail
+
+#Color definition
+ERROR_COLOR="\e[31m"
+RESET_COLOR="\e[em"
+WARN_COLOR ="\e[33m"
+INFO_COLOR="\e[32m"
+
 if [ "$(id -u)" == 0 ]; then                                                                                    # checks for root
     echo -e "\e[1:31mPlease do not run in root\e[0m"
     exit 1
