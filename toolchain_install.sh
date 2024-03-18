@@ -113,6 +113,15 @@ if [[ "$VERBOSE" != true ]]; then
 # Linking and optional cleanup (consider adding error handling for linking)
 ld -o "$OUTPUT_FILE" "$OUTPUT_FILE.o"  # Link object file to executable
 
+if [[ "$CLEANUP" == true ]]; then
+  rm -f "$OUTPUT_FILE.o"  # Optional cleanup (remove object file)
+fi
+
+# Conditional output based on verbose mode
+if [[ "$VERBOSE" == true ]]; then
+  echo -e "${INFO_COLOR}[$(date +'%Y-%m-%d %H:%M:%S')] Linking finished.${RESET_COLOR}"
+fi
+
 
 # Original Script below: 
 # Compile assembly based on architecture
