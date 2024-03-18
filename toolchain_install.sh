@@ -85,6 +85,20 @@ if [[ -z "<span class="math-inline">OUTPUT\_FILE" \]\]; then
 OUTPUT\_FILE\="</span>{1%.*}"
 fi
 
+# Verbose output with timestamp
+if [[ "<span class="math-inline">VERBOSE" \=\= true \]\]; then
+echo \-e "</span>{INFO_COLOR}[<span class="math-inline">\(date \+'%Y\-%m\-%d %H\:%M\:%S'\)\] Arguments being set\:</span>{RESET_COLOR}"
+  echo "  GDB = ${GDB}"
+  echo "  RUN = ${RUN}"
+  echo "  BREAK = ${BREAK}"
+  echo "  QEMU = ${QEMU}"
+  echo "  CLEANUP = ${CLEANUP}"  # Optional cleanup flag
+  echo "  Input File = $1"
+  echo "  Output File = <span class="math-inline">OUTPUT\_FILE"
+echo ""
+echo \-e "</span>{INFO_COLOR}[<span class="math-inline">\(date \+'%Y\-%m\-%d %H\:%M\:%S'\)\] NASM started\.\.\.</span>{RESET_COLOR}"
+fi
+
 
 # Original Script below: 
 # Compile assembly based on architecture
