@@ -122,6 +122,17 @@ if [[ "$VERBOSE" == true ]]; then
   echo -e "${INFO_COLOR}[$(date +'%Y-%m-%d %H:%M:%S')] Linking finished.${RESET_COLOR}"
 fi
 
+# Script execution based on options
+if [[ "$GDB" == true ]]; then
+  gdb "$OUTPUT_FILE" -ex "break $BREAK"  # Set breakpoint before starting gdb
+  if [[ "$RUN" == true ]]; then
+    gdb -command="run"  # Run the program in gdb after setting breakpoint
+  fi
+elif [[ "$QEMU" == true ]]; then
+  #  Add logic to run the executable in QEMU emulator (consider user-provided options)
+  echo -e "${WARN_COLOR}Warning:${RESET_COLOR} QEMU emulation not currently implemented."
+fi
+
 
 # Original Script below: 
 # Compile assembly based on architecture
