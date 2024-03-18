@@ -1,12 +1,12 @@
-#! /bin/bash
+#! /bin/bash							# bash script - should be executed in bash
 
 # Created by Lubos Kuzma
 # ISS Program, SADT, SAIT
 # August 2022
 
-
-if [ $# -lt 1 ]; then
-	echo "Usage:"
+# Checking to see if the number of command-line arguments is less than 1, then displays the following message and exits
+if [ $# -lt 1 ]; then						
+	echo "Usage:"						
 	echo ""
 	echo "x86_toolchain.sh [ options ] <assembly filename> [-o | --output <output filename>]"
 	echo ""
@@ -72,18 +72,22 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
+# updates positional arguments stored in the POSITIONAL_ARGS array
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+# checks if the first positional argument is incorrect - then prints an error message.
 if [[ ! -f $1 ]]; then
 	echo "Specified file does not exist"
 	exit 1
 fi
 
+#checks if the OUTPUT_FILE variable is empty
 if [ "$OUTPUT_FILE" == "" ]; then
 	OUTPUT_FILE=${1%.*}
 fi
 
-if [ "$VERBOSE" == "True" ]; then												#prints arguments
+#checks if the verbose value is "True", then prints the following arguments
+if [ "$VERBOSE" == "True" ]; then
 	echo "Arguments being set:"
 	echo "	GDB = ${GDB}"
 	echo "	RUN = ${RUN}"
@@ -99,6 +103,7 @@ if [ "$VERBOSE" == "True" ]; then												#prints arguments
 
 fi
 
+# checks if BITS are valued at "True" or "False" and changes the format to 64-bit and 32-bit, respectively and starts NASM
 if [ "$BITS" == "True" ]; then
 
 	nasm -f elf64 $1 -o $OUTPUT_FILE.o && echo ""
@@ -110,6 +115,7 @@ elif [ "$BITS" == "False" ]; then
 
 fi
 
+# checks if verbose is set to "True", prints the following
 if [ "$VERBOSE" == "True" ]; then
 
 	echo "NASM finished"
@@ -117,12 +123,7 @@ if [ "$VERBOSE" == "True" ]; then
 	
 fi
 
-if [ "$VERBOSE" == "True" ]; then
-
-	echo "NASM finished"
-	echo "Linking ..."
-fi
-
+# checks if BITS are valued at "True" or "False" and uses the ld linker to link the object file into an executable for its respective architecture
 if [ "$BITS" == "True" ]; then
 
 	ld -m elf_x86_64 $OUTPUT_FILE.o -o $OUTPUT_FILE && echo ""
@@ -134,13 +135,14 @@ elif [ "$BITS" == "False" ]; then
 
 fi
 
-
+# prints if verbose is "True"
 if [ "$VERBOSE" == "True" ]; then
 
 	echo "Linking finished"
 
 fi
 
+# checks if the emulator QEMU value is "True"; if so, start the QEMU based on the bit architecture
 if [ "$QEMU" == "True" ]; then
 
 	echo "Starting QEMU ..."
@@ -160,17 +162,22 @@ if [ "$QEMU" == "True" ]; then
 	
 fi
 
+# checks if the GDB value is "True"; if so, creates an array "gdb_params"
 if [ "$GDB" == "True" ]; then
 
 	gdb_params=()
+
+  	# adds a BREAK parameter
 	gdb_params+=(-ex "b ${BREAK}")
 
+	# if the RUN value is "True", adds a run command
 	if [ "$RUN" == "True" ]; then
 
 		gdb_params+=(-ex "r")
 
 	fi
 
+	# executes the GDB debugger with saved parameters and the executable file
 	gdb "${gdb_params[@]}" $OUTPUT_FILE
 
 fi
