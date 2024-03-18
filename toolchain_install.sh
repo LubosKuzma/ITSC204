@@ -99,6 +99,12 @@ echo ""
 echo \-e "</span>{INFO_COLOR}[<span class="math-inline">\(date \+'%Y\-%m\-%d %H\:%M\:%S'\)\] NASM started\.\.\.</span>{RESET_COLOR}"
 fi
 
+# Compile assembly based on architecture
+if [[ "$BITS" == true ]]; then
+  nasm -f elf64 "$1" -o "$OUTPUT_FILE.o" && echo ""
+else
+  nasm -f elf "$1" -o "$OUTPUT_FILE.o" && echo ""
+fi
 
 # Original Script below: 
 # Compile assembly based on architecture
