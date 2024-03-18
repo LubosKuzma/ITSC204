@@ -30,6 +30,27 @@ error_exit(){
 }
 
 
+#Function to print script usage (Propose change from the original)
+print_usage(){
+    echo "Usage:"
+    echo ""
+    echo "  $SCRIPT_NAME [ options ] <assembly filename> [-o | --output <output filename>]"
+    echo ""
+    echo "  -v | --verbose                Show detailed information about steps performed."
+    echo "  -g | --gdb                    Run gdb command on the executable."
+    echo "  -b | --break <break point>    Add breakpoint after running gdb. Default is _start."
+    echo "  -r | --run                    Run program in gdb automatically (same as 'run' command inside gdb)."
+    echo "  -q | --qemu                   Run executable in QEMU emulator."
+    echo "  -64| --x86-64                 Compile for 64bit (x86-64) system."
+    echo "  -o | --output <filename>      Output filename."
+    echo "  -h | --help                   Display this help message."
+    echo ""
+    exit 1
+}
+
+
+
+
 if [ "$(id -u)" == 0 ]; then                                                                                    # checks for root
     echo -e "\e[1:31mPlease do not run in root\e[0m"
     exit 1
