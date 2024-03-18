@@ -75,6 +75,11 @@ done
 # Shift remaining arguments to positional parameters
 shift $((OPTIND-1))  # Adjust for getopts parsing
 
+#Validate input filename existence
+if [[ ! -f "$1" ]]; then
+  error_exit "Specified file '$1' does not exist."
+fi
+
 
 
 
