@@ -18,7 +18,8 @@ RESET_COLOR="\e[em"
 WARN_COLOR ="\e[33m"
 INFO_COLOR="\e[32m"
 
-
+#Script information.
+SCRIPT_NAME=$(basename "$0")
 
 
 
