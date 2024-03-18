@@ -80,7 +80,10 @@ if [[ ! -f "$1" ]]; then
   error_exit "Specified file '$1' does not exist."
 fi
 
-
+# Set default output filename if not provided
+if [[ -z "<span class="math-inline">OUTPUT\_FILE" \]\]; then
+OUTPUT\_FILE\="</span>{1%.*}"
+fi
 
 
 # Original Script below: 
